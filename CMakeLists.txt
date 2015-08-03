@@ -19,21 +19,16 @@ include(CMakePackageConfigHelpers)
 
 # Build options
 option(BUILD_SHARED_LIBS "Build shared library" OFF)
-option(OGG_BUILD_STATIC_LIBS "Build static library" ON)
 if (MSVC)
-    option(OGG_USE_STATIC_RUNTIME "Use static msvc runtime" OFF)
+    option(USE_STATIC_RUNTIME "Use static msvc runtime" OFF)
 endif()
+
 if (APPLE)
     option(BUILD_FRAMEWORK "Build Framework bundle for OSX" OFF)
 endif()
 
-if (NOT OGG_BUILD_STATIC_LIBS AND NOT BUILD_SHARED_LIBS)
-    message(STATUC "Both static and shared builds are disabled... enabling static build")
-    set(OGG_BUILD_STATIC_LIBS ON)
-endif()
-
 # statically link msvc runtime
-if (MSVC AND OGG_USE_STATIC_RUNTIME)
+if (MSVC AND USE_STATIC_RUNTIME)
 	foreach(flag_var
 		CMAKE_C_FLAGS CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE
 		CMAKE_C_FLAGS_MINSIZEREL CMAKE_C_FLAGS_RELWITHDEBINFO)
@@ -112,37 +107,18 @@ list(APPEND private_include_dirs
 
 get_version_info(OGG_VERSION_INFO "LIB_CURRENT" "LIB_AGE" "LIB_REVISION")
 
-if(BUILD_SHARED_LIBS)
-    list(APPEND libs "libogg")
-    add_library(libogg SHARED ${OGG_HEADERS} ${OGG_SOURCES})
-    set_target_properties(libogg PROPERTIES
-        SOVERSION ${OGG_VERSION_INFO}
-        INCLUDE_DIRECTORIES "${private_include_dirs}"
-        INTERFACE_INCLUDE_DIRECTORIES "$<BUILD_INTERFACE:${private_include_dirs}>;$<INSTALL_INTERFACE:include>"
-        IMPORT_SUFFIX "_imp${CMAKE_IMPORT_LIBRARY_SUFFIX}"
-        PREFIX ""
-        )
-    if(BUILD_FRAMEWORK)
-        set_target_properties(libogg PROPERTIES
-            FRAMEWORK TRUE
-            FRAMEWORK_VERSION ${PROJECT_VERSION}
-            MACOSX_FRAMEWORK_IDENTIFIER org.xiph.ogg
-            MACOSX_FRAMEWORK_SHORT_VERSION_STRING ${PROJECT_VERSION}
-            MACOSX_FRAMEWORK_BUNDLE_VERSION ${PROJECT_VERSION}
-            XCODE_ATTRIBUTE_INSTALL_PATH "@rpath"
-            PUBLIC_HEADER "${OGG_HEADERS}")
-    endif()
-endif()
-
-list(APPEND libs "libogg_static")
-add_library(libogg_static STATIC ${OGG_HEADERS} ${OGG_SOURCES})
-set_target_properties(libogg_static PROPERTIES
+add_library(libogg ${OGG_HEADERS} ${OGG_SOURCES})
+set_target_properties(libogg PROPERTIES
+    SOVERSION ${OGG_VERSION_INFO}
     INCLUDE_DIRECTORIES "${private_include_dirs}"
     INTERFACE_INCLUDE_DIRECTORIES "$<BUILD_INTERFACE:${private_include_dirs}>;$<INSTALL_INTERFACE:include>"
-    PREFIX "")
+    IMPORT_SUFFIX "_imp${CMAKE_IMPORT_LIBRARY_SUFFIX}"
+    PREFIX ""
+    IMPORT_PREFIX ""
+    )
 
 if(BUILD_FRAMEWORK)
-    set_target_properties(libogg_static PROPERTIES
+    set_target_properties(libogg PROPERTIES
         FRAMEWORK TRUE
         FRAMEWORK_VERSION ${PROJECT_VERSION}
         MACOSX_FRAMEWORK_IDENTIFIER org.xiph.ogg
@@ -160,9 +136,9 @@ install(FILES
     include/ogg/ogg.h
     include/ogg/os_types.h
     include/ogg/config_types.h
-    DESTINATION include)
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ogg)
 
-install(TARGETS ${libs}
+install(TARGETS libogg
     EXPORT ${PROJECT_NAME}Config
     RUNTIME DESTINATION bin
     LIBRARY DESTINATION lib
