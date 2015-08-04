@@ -135,7 +135,7 @@ write_basic_package_version_file("${PROJECT_NAME}ConfigVersion.cmake" COMPATIBIL
 install(FILES
     include/ogg/ogg.h
     include/ogg/os_types.h
-    include/ogg/config_types.h
+    ${CMAKE_CURRENT_BINARY_DIR}/include/ogg/config_types.h
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ogg)
 
 install(TARGETS libogg
