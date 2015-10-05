@@ -20,7 +20,7 @@ include(CMakePackageConfigHelpers)
 # Build options
 option(BUILD_SHARED_LIBS "Build shared library" OFF)
 if (MSVC)
-    option(USE_STATIC_RUNTIME "Use static msvc runtime" OFF)
+    option(MSVC_LINK_STATIC_RUNTIME "Use static msvc runtime" OFF)
 endif()
 
 if (APPLE)
@@ -28,7 +28,7 @@ if (APPLE)
 endif()
 
 # statically link msvc runtime
-if (MSVC AND USE_STATIC_RUNTIME)
+if (MSVC AND MSVC_LINK_STATIC_RUNTIME)
 	foreach(flag_var
 		CMAKE_C_FLAGS CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE
 		CMAKE_C_FLAGS_MINSIZEREL CMAKE_C_FLAGS_RELWITHDEBINFO)
