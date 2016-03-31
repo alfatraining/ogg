@@ -1,12 +1,16 @@
 cmake_minimum_required(VERSION 3.0.0)
 
 # Extract project version from configure.ac
-file(READ configure.ac CONFIGURE_AC_CONTENTS)
-string(REGEX MATCH "AC_INIT\\(\\[libogg\\],\\[([0-9]*).([0-9]*).([0-9]*)" DUMMY ${CONFIGURE_AC_CONTENTS})
-set(PROJECT_VERSION_MAJOR ${CMAKE_MATCH_1})
-set(PROJECT_VERSION_MINOR ${CMAKE_MATCH_2})
-set(PROJECT_VERSION_PATCH ${CMAKE_MATCH_3})
+set(PROJECT_VERSION_MAJOR 1)
+set(PROJECT_VERSION_MINOR 3)
+set(PROJECT_VERSION_PATCH 2)
 set(PROJECT_VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
+
+set(VERSION_INFO_CURRENT 8)
+set(VERSION_INFO_REVISION 2)
+set(VERSION_INFO_AGE 8)
+math(EXPR VERSION_INFO_CURRENT_MINUS_AGE "${VERSION_INFO_CURRENT} - ${VERSION_INFO_AGE}")
+set(OGG_VERSION_INFO "${VERSION_INFO_CURRENT_MINUS_AGE}.${VERSION_INFO_AGE}.${VERSION_INFO_REVISION}")
 
 project(ogg VERSION ${PROJECT_VERSION})
 
@@ -39,33 +43,6 @@ if (MSVC AND MSVC_LINK_STATIC_RUNTIME)
 	endforeach(flag_var)
 endif()
 
-# Helper function to get version-info
-function(get_version_info result current_var_name age_var_name revision_var_name)
-    string(REGEX MATCH "${current_var_name}=([0-9]*)" DUMMY ${CONFIGURE_AC_CONTENTS})
-    set(VERSION_INFO_CURRENT ${CMAKE_MATCH_1})
-
-    string(REGEX MATCH "${age_var_name}=([0-9]*)" DUMMY ${CONFIGURE_AC_CONTENTS})
-    set(VERSION_INFO_AGE ${CMAKE_MATCH_1})
-
-    string(REGEX MATCH "${revision_var_name}=([0-9]*)" DUMMY ${CONFIGURE_AC_CONTENTS})
-    set(VERSION_INFO_REVISION ${CMAKE_MATCH_1})
-
-    math(EXPR VERSION_INFO_CURRENT_MINUS_AGE "${VERSION_INFO_CURRENT} - ${VERSION_INFO_AGE}")
-
-    set(${result} "${VERSION_INFO_CURRENT_MINUS_AGE}.${VERSION_INFO_AGE}.${VERSION_INFO_REVISION}" PARENT_SCOPE)
-endfunction()
-
-# Helper function to configure pkg-config files
-function(configure_pkg_config_file pkg_config_file_in)
-    set(prefix ${CMAKE_INSTALL_PREFIX})
-    set(exec_prefix ${CMAKE_INSTALL_FULL_BINDIR})
-    set(libdir ${CMAKE_INSTALL_FULL_LIBDIR})
-    set(includedir ${CMAKE_INSTALL_FULL_INCLUDEDIR})
-    set(VERSION ${PROJECT_VERSION})
-    string(REPLACE ".in" "" pkg_config_file ${pkg_config_file_in})
-    configure_file(${pkg_config_file_in} ${CMAKE_CURRENT_SOURCE_DIR}/${pkg_config_file} @ONLY)
-endfunction()
-
 message(STATUS "Configuring ${PROJECT_NAME} ${PROJECT_VERSION}")
 
 # Configure config_type.h
@@ -80,6 +57,7 @@ set(USIZE32 uint32_t)
 set(SIZE64 int64_t)
 
 configure_file(include/ogg/config_types.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/ogg/config_types.h @ONLY)
+configure_file(ogg.pc.in ${CMAKE_CURRENT_BINARY_DIR}/ogg.pc @ONLY)
 
 set(OGG_HEADERS
     include/ogg/ogg.h
@@ -105,9 +83,8 @@ list(APPEND private_include_dirs
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
     "${CMAKE_CURRENT_BINARY_DIR}/include")
 
-get_version_info(OGG_VERSION_INFO "LIB_CURRENT" "LIB_AGE" "LIB_REVISION")
-
-add_library(libogg ${OGG_HEADERS} ${OGG_SOURCES})
+# ogg only static for now
+add_library(libogg STATIC ${OGG_HEADERS} ${OGG_SOURCES})
 set_target_properties(libogg PROPERTIES
     SOVERSION ${OGG_VERSION_INFO}
     INCLUDE_DIRECTORIES "${private_include_dirs}"
@@ -128,8 +105,6 @@ if(BUILD_FRAMEWORK)
         PUBLIC_HEADER "${OGG_HEADERS}")
 endif()
 
-configure_pkg_config_file(ogg.pc.in)
-
 write_basic_package_version_file("${PROJECT_NAME}ConfigVersion.cmake" COMPATIBILITY SameMajorVersion)
 
 install(FILES
@@ -144,8 +119,6 @@ install(TARGETS libogg
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
     FRAMEWORK DESTINATION lib)
-
-configure_file(ogg.pc.in ${CMAKE_CURRENT_BINARY_DIR}/ogg.pc COPYONLY)
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/ogg.pc
     DESTINATION lib/pkgconfig)
