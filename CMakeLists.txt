@@ -69,7 +69,7 @@ set(OGG_SOURCES
     src/framing.c
 )
 
-if(MSVC)
+if(MSVC AND BUILD_SHARED_LIBS)
     list(APPEND OGG_SOURCES win32/ogg.def)
 endif()
 
