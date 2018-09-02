@@ -124,7 +124,7 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/ogg.pc
     DESTINATION lib/pkgconfig)
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
-	DESTINATION lib/cmake)
+	DESTINATION cmake)
 
 install(EXPORT ${PROJECT_NAME}Config
-	DESTINATION lib/cmake)
+	DESTINATION cmake)
